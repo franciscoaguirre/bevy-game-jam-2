@@ -4,6 +4,9 @@ use bevy_rapier3d::prelude::*;
 mod player;
 use player::{spawn_player, PlayerPlugin};
 
+mod combine;
+use combine::{spawn_box, CombinePlugin};
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -13,6 +16,7 @@ fn main() {
         .add_startup_system(setup_cameras)
         .add_startup_system(setup_lights)
         .add_plugin(PlayerPlugin)
+        .add_plugin(CombinePlugin)
         .add_system(bevy::window::close_on_esc)
         .run();
 }
@@ -50,13 +54,30 @@ fn setup(
             ..default()
         });
 
-    let cube_size = 1.0;
-    spawn_player(&mut commands, &mut meshes, &mut materials, cube_size);
+    spawn_player(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Vec3::new(0.0, 0.5, 0.0),
+    );
+
+    spawn_box(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Vec3::new(3.0, 1., -3.0),
+    );
+    spawn_box(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        Vec3::new(1.0, 1., -3.0),
+    );
 }
 
 fn setup_cameras(mut commands: Commands) {
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0., 5., 5.).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0., 5., 10.).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 }
