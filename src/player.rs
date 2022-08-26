@@ -1,8 +1,13 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-#[derive(Component, Debug)]
-pub struct Player;
+use super::combine::CombinableObject;
+
+#[derive(Component, Debug, Default)]
+pub struct Player {
+    pub entity_to_combine: Option<Entity>,
+    pub combined_with: Option<CombinableObject>,
+}
 
 #[derive(Component)]
 struct GroundCheck;
@@ -39,7 +44,7 @@ pub fn spawn_player(
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(CollisionGroups::new(0b0001, 0b0010))
         .insert(GravityScale(5.0))
-        .insert(Player)
+        .insert(Player::default())
         .insert(Grounded(true))
         .insert_bundle(PbrBundle {
             transform: Transform {
