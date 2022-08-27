@@ -1,8 +1,13 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-#[derive(Component)]
-struct Player;
+use super::combine::CombinableObject;
+
+#[derive(Component, Debug, Default)]
+pub struct Player {
+    pub entity_to_combine: Option<Entity>,
+    pub combined_with: Option<CombinableObject>,
+}
 
 #[derive(Component)]
 struct GroundCheck;
@@ -24,8 +29,10 @@ pub fn spawn_player(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-    cube_size: f32,
-) {
+    position: Vec3,
+) -> Entity {
+    let cube_size = 1.0;
+
     commands
         .spawn()
         .insert(RigidBody::Dynamic)
@@ -34,13 +41,14 @@ pub fn spawn_player(
             cube_size / 2.,
             cube_size / 2.,
         ))
+        .insert(LockedAxes::ROTATION_LOCKED)
         .insert(CollisionGroups::new(0b0001, 0b0010))
         .insert(GravityScale(5.0))
-        .insert(Player)
+        .insert(Player::default())
         .insert(Grounded(true))
         .insert_bundle(PbrBundle {
             transform: Transform {
-                translation: Vec3::new(0.0, 0.5, 0.0),
+                translation: position,
                 scale: Vec3::ONE,
                 ..default()
             },
@@ -66,7 +74,8 @@ pub fn spawn_player(
                     -cube_size / 2.,
                     0.0,
                 )));
-        });
+        })
+        .id()
 }
 
 fn move_player(
@@ -74,7 +83,7 @@ fn move_player(
     mut velocities: Query<&mut Velocity, With<Player>>,
 ) {
     let mut direction = Vec3::ZERO;
-    let speed = 10.0;
+    let speed = 10.;
     for mut velocity in velocities.iter_mut() {
         if keyboard_input.pressed(KeyCode::Up) {
             direction += Vec3::new(0.0, 0.0, -1.0);
@@ -100,7 +109,7 @@ fn jump_player(
     keyboard_input: Res<Input<KeyCode>>,
     mut query: Query<(&mut Velocity, &mut Grounded), With<Player>>,
 ) {
-    let jump_strength = 10.0;
+    let jump_strength = 10.;
     for (mut velocity, mut is_grounded) in query.iter_mut() {
         if keyboard_input.just_pressed(KeyCode::Space) && is_grounded.0 {
             is_grounded.0 = false;
